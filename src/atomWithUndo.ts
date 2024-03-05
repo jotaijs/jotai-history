@@ -19,16 +19,23 @@ export function atomWithUndo<T>(targetAtom: PrimitiveAtom<T>, limit: number) {
   const UNDO = Symbol('undo')
   const REDO = Symbol('redo')
   type DoAction = typeof UNDO | typeof REDO
-  const refAtom = atom(() => ({
+  const createRef = () => ({
     index: 0,
-    stack: [] as T[][],
+    stack: [] as T[],
     action: null as DoAction | null,
-  }))
+  })
+  const refreshAtom = atom(0)
+  const refAtom = atom(createRef, (get, set) => {
+    void Object.assign(get(refAtom), createRef())
+    set(refreshAtom, (c) => c + 1)
+  })
+  refAtom.onMount = (unmount) => unmount
   refAtom.debugPrivate = true
   const updateRefAtom = atom(
     (get) => {
       const history = get(historyAtom)
       const ref = get(refAtom)
+      get(refreshAtom)
       if (ref.action) {
         // recalculation caused by undo/redo
         ref.action = null
@@ -36,18 +43,18 @@ export function atomWithUndo<T>(targetAtom: PrimitiveAtom<T>, limit: number) {
         // Remove future states if any
         ref.stack = ref.stack.slice(0, ref.index + 1)
         // Push the current state to the history
-        ref.stack.push(history.slice())
+        ref.stack.push(history[0] as T)
         // Limit the history
         ref.stack = ref.stack.slice(-limit)
         // Move the current index to the end
         ref.index = ref.stack.length - 1
       }
-      return null
+      return { ...ref }
     },
     (get) => {
-      get(refAtom).stack = [[get(targetAtom)]]
+      const ref = get(refAtom)
+      ref.stack = [get(targetAtom)]
       return () => {
-        const ref = get(refAtom)
         ref.index = 0
         ref.stack.length = 0
       }
@@ -55,27 +62,27 @@ export function atomWithUndo<T>(targetAtom: PrimitiveAtom<T>, limit: number) {
   )
   updateRefAtom.onMount = (mount) => mount()
   updateRefAtom.debugPrivate = true
+  const canUndoAtom = atom((get) => {
+    console.log('canUndoAtom', get(updateRefAtom), get(refAtom))
+    return get(updateRefAtom).index > 0
+  })
+  const canRedoAtom = atom((get) => {
+    const ref = get(updateRefAtom)
+    return ref.index < ref.stack.length - 1
+  })
   const baseAtom = atom<Undoable, [DoAction], void>(
-    (get, { setSelf }) => {
-      get(updateRefAtom)
-
-      return {
-        undo: () => setSelf(UNDO),
-        redo: () => setSelf(REDO),
-        get canUndo() {
-          return get(refAtom).index > 0
-        },
-        get canRedo() {
-          return get(refAtom).index < get(refAtom).stack.length - 1
-        },
-      }
-    },
+    (get, { setSelf }) => ({
+      undo: () => setSelf(UNDO),
+      redo: () => setSelf(REDO),
+      canUndo: get(canUndoAtom),
+      canRedo: get(canRedoAtom),
+    }),
     (get, set, update) => {
       const ref = get(refAtom)
       const setCurrentState = () => {
-        const currentSlice = ref.stack[ref.index]
-        if (currentSlice?.[0] === undefined) return
-        set(targetAtom, currentSlice[0])
+        const value = ref.stack[ref.index]
+        if (value === undefined) return
+        set(targetAtom, value as T)
       }
       if (update === UNDO) {
         if (get(baseAtom).canUndo) {

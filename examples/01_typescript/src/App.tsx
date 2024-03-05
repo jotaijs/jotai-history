@@ -3,12 +3,25 @@ import { useAtom, useAtomValue } from 'jotai/react'
 import { atom } from 'jotai/vanilla'
 import { atomWithUndo } from 'jotai-history'
 
-const baseSearchTextAtom = atom('')
-const searchTextAtom = atomWithUndo<string>(baseSearchTextAtom, 10)
+const searchTextAtom = atom('')
+const undoRedoAtom = atomWithUndo<string>(searchTextAtom, 10)
+
+function UndoRedoControls() {
+  const { undo, redo, canUndo, canRedo } = useAtomValue(undoRedoAtom)
+  return (
+    <>
+      <button onClick={undo} disabled={!canUndo}>
+        Undo
+      </button>
+      <button onClick={redo} disabled={!canRedo}>
+        Redo
+      </button>
+    </>
+  )
+}
 
 export function App() {
-  const { undo, redo, canUndo, canRedo } = useAtomValue(searchTextAtom)
-  const [searchText, setSearchText] = useAtom(baseSearchTextAtom)
+  const [searchText, setSearchText] = useAtom(searchTextAtom)
 
   return (
     <>
@@ -19,12 +32,7 @@ export function App() {
         onChange={(e) => setSearchText(e.target.value as string)}
       />
       <div>
-        <button onClick={undo} disabled={!canUndo}>
-          Undo
-        </button>
-        <button onClick={redo} disabled={!canRedo}>
-          Redo
-        </button>
+        <UndoRedoControls />
       </div>
     </>
   )

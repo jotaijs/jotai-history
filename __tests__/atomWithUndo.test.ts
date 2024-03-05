@@ -62,11 +62,18 @@ describe('atomWithUndo', () => {
     expect(store.get(undoableAtom).canRedo).toBe(true) // Redo becomes available after undo
   })
 
-  it('cleans up history on unmount', () => {
+  it('cleans up history on unmount', async () => {
     store.set(baseAtom, 1)
     expect(store.get(undoableAtom).canUndo).toBe(true) // Can undo before unmount
+    console.log('unsub')
     unsub() // Unsubscribe to unmount
+    console.log('sub')
     unsub = store.sub(undoableAtom, () => {}) // Subscribe to mount
+    await delay(100)
     expect(store.get(undoableAtom).canUndo).toBe(false) // Cannot undo after unmount
   })
 })
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}

@@ -24,14 +24,15 @@ The history atom tracks changes to the `targetAtom` and maintains a list of prev
 ### Usage
 
 ```tsx
-import { atom } from 'jotai'
+import { atom, useAtomValue, useSetAtom } from 'jotai'
 import { atomWithHistory } from 'jotai/utils'
 
 const countAtom = atom(0)
 const countWithPrevious = atomWithHistory(myAtom, 2)
 
 export function CountComponent() {
-  const [[count, previousCount], setCount] = useAtom(countWithPrevious)
+  const [count, previousCount] = useAtomValue(countWithPrevious)
+  const setCount = useSetAtom(countAtom)
 
   return (
     <>
@@ -69,7 +70,7 @@ The returned object includes:
 ### Usage
 
 ```tsx
-import { atom } from 'jotai'
+import { atom, useAtom, useAtomValue } from 'jotai'
 import { atomWithUndo } from 'jotai/utils'
 
 const counterAtom = atom(0)

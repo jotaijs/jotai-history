@@ -8,19 +8,13 @@ import type { Atom } from 'jotai/vanilla'
  */
 export function atomWithHistory<T>(targetAtom: Atom<T>, limit: number) {
   const refAtom = atom(
-    () => ({
-      history: [] as T[],
-    }),
-    (get) => () => {
-      get(refAtom).history.length = 0
-    }
+    () => ({ history: [] as T[] }),
+    (get, _set) => () => void (get(refAtom).history.length = 0)
   )
   refAtom.onMount = (mount) => mount()
   refAtom.debugPrivate = true
   return atom((get) => {
     const ref = get(refAtom)
-    const value = get(targetAtom)
-    ref.history = [value, ...ref.history].slice(0, limit)
-    return ref.history
+    return (ref.history = [get(targetAtom), ...ref.history].slice(0, limit))
   })
 }
