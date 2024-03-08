@@ -63,7 +63,6 @@ export function atomWithUndo<T>(targetAtom: PrimitiveAtom<T>, limit: number) {
   updateRefAtom.onMount = (mount) => mount()
   updateRefAtom.debugPrivate = true
   const canUndoAtom = atom((get) => {
-    console.log('canUndoAtom', get(updateRefAtom), get(refAtom))
     return get(updateRefAtom).index > 0
   })
   const canRedoAtom = atom((get) => {

@@ -7,6 +7,20 @@ describe('atomWithUndo', () => {
   let baseAtom: PrimitiveAtom<number>
   let undoableAtom: ReturnType<typeof atomWithUndo<number>>
   let unsub: () => void
+  const undoable = {
+    undo() {
+      return store.get(undoableAtom).undo()
+    },
+    redo() {
+      return store.get(undoableAtom).redo()
+    },
+    get canUndo() {
+      return store.get(undoableAtom).canUndo
+    },
+    get canRedo() {
+      return store.get(undoableAtom).canRedo
+    },
+  }
 
   beforeEach(() => {
     store = createStore()
@@ -18,15 +32,15 @@ describe('atomWithUndo', () => {
   it('supports undo operation', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
-    store.get(undoableAtom).undo()
+    undoable.undo()
     expect(store.get(baseAtom)).toBe(1) // Should undo to the previous value
   })
 
   it('supports redo operation', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
-    store.get(undoableAtom).undo()
-    store.get(undoableAtom).redo()
+    undoable.undo()
+    undoable.redo()
     expect(store.get(baseAtom)).toBe(2) // Should redo to the value before undo
   })
 
@@ -37,43 +51,60 @@ describe('atomWithUndo', () => {
     store.set(baseAtom, 3)
     store.set(baseAtom, 4)
 
-    expect(store.get(undoableAtom).canUndo).toBe(true)
-    expect(store.get(undoableAtom).canRedo).toBe(false)
-    store.get(undoableAtom).undo()
-    expect(store.get(undoableAtom).canUndo).toBe(true)
-    store.get(undoableAtom).undo()
+    expect(undoable.canUndo).toBe(true)
+    expect(undoable.canRedo).toBe(false)
+    undoable.undo()
+    expect(undoable.canUndo).toBe(true)
+    undoable.undo()
 
-    expect(store.get(undoableAtom).canUndo).toBe(false) // Cannot undo beyond limit
-    expect(store.get(undoableAtom).canRedo).toBe(true)
-    store.get(undoableAtom).redo()
-    expect(store.get(undoableAtom).canUndo).toBe(true)
-    store.get(undoableAtom).redo()
+    expect(undoable.canUndo).toBe(false) // Cannot undo beyond limit
+    expect(undoable.canRedo).toBe(true)
+    undoable.redo()
+    expect(undoable.canUndo).toBe(true)
+    undoable.redo()
 
-    expect(store.get(undoableAtom).canUndo).toBe(true)
-    expect(store.get(undoableAtom).canRedo).toBe(false) // Cannot redo beyond limit
+    expect(undoable.canUndo).toBe(true)
+    expect(undoable.canRedo).toBe(false) // Cannot redo beyond limit
   })
 
   it('checks undo and redo availability', () => {
-    expect(store.get(undoableAtom).canUndo).toBe(false) // No undo initially
-    expect(store.get(undoableAtom).canRedo).toBe(false) // No redo initially
+    expect(undoable.canUndo).toBe(false) // No undo initially
+    expect(undoable.canRedo).toBe(false) // No redo initially
     store.set(baseAtom, 1)
-    expect(store.get(undoableAtom).canUndo).toBe(true) // Undo becomes available
-    store.get(undoableAtom).undo()
-    expect(store.get(undoableAtom).canRedo).toBe(true) // Redo becomes available after undo
+    expect(undoable.canUndo).toBe(true) // Undo becomes available
+    undoable.undo()
+    expect(undoable.canRedo).toBe(true) // Redo becomes available after undo
   })
 
-  it('cleans up history on unmount', async () => {
+  it('cleans up history on unmount', () => {
     store.set(baseAtom, 1)
-    expect(store.get(undoableAtom).canUndo).toBe(true) // Can undo before unmount
-    console.log('unsub')
+    expect(undoable.canUndo).toBe(true) // Can undo before unmount
     unsub() // Unsubscribe to unmount
-    console.log('sub')
     unsub = store.sub(undoableAtom, () => {}) // Subscribe to mount
-    await delay(100)
-    expect(store.get(undoableAtom).canUndo).toBe(false) // Cannot undo after unmount
+    expect(undoable.canUndo).toBe(false) // Cannot undo after unmount
+  })
+
+  it('rerenders when only undo/redo is changes', () => {
+    const spy = jest.fn()
+    store.sub(undoableAtom, spy)
+    expect(undoable).toMatchObject({ canUndo: false, canRedo: false }) // start
+    store.set(baseAtom, 1)
+    expect(undoable).toMatchObject({ canUndo: true, canRedo: false }) // canUndo changed
+    expect(spy).toBeCalledTimes(1)
+    store.set(baseAtom, 2)
+    expect(undoable).toMatchObject({ canUndo: true, canRedo: false }) // no-change
+    expect(spy).toBeCalledTimes(1)
+    undoable.undo()
+    expect(undoable).toMatchObject({ canUndo: true, canRedo: true }) // canRedo changed
+    expect(spy).toBeCalledTimes(2)
+    undoable.undo()
+    expect(undoable).toMatchObject({ canUndo: false, canRedo: true }) // canUndo changed
+    expect(spy).toBeCalledTimes(3)
+    undoable.redo()
+    expect(undoable).toMatchObject({ canUndo: true, canRedo: true }) // canUndo changed
+    expect(spy).toBeCalledTimes(4)
+    undoable.redo()
+    expect(undoable).toMatchObject({ canUndo: true, canRedo: false }) // no-change
+    expect(spy).toBeCalledTimes(5)
   })
 })
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
