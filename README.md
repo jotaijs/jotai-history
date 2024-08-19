@@ -28,7 +28,7 @@ import { atom, useAtomValue, useSetAtom } from 'jotai'
 import { atomWithHistory } from 'jotai/utils'
 
 const countAtom = atom(0)
-const countWithPrevious = atomWithHistory(myAtom, 2)
+const countWithPrevious = atomWithHistory(countAtom, 2)
 
 export function CountComponent() {
   const [count, previousCount] = useAtomValue(countWithPrevious)
