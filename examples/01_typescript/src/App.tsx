@@ -1,10 +1,10 @@
 import React from 'react'
 import { useAtom, useAtomValue } from 'jotai/react'
 import { atom } from 'jotai/vanilla'
-import { atomWithUndo } from 'jotai-history'
+import { withUndo } from 'jotai-history'
 
 const searchTextAtom = atom('')
-const undoRedoAtom = atomWithUndo<string>(searchTextAtom, 10)
+const undoRedoAtom = withUndo<string>(searchTextAtom, 10)
 
 function UndoRedoControls() {
   const { undo, redo, canUndo, canRedo } = useAtomValue(undoRedoAtom)

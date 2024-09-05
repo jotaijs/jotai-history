@@ -1,11 +1,11 @@
 import { atom, createStore } from 'jotai/vanilla'
 import type { PrimitiveAtom } from 'jotai/vanilla'
-import { atomWithUndo } from '../src/atomWithUndo'
+import { withUndo } from '../src/withUndo'
 
-describe('atomWithUndo', () => {
+describe('withUndo', () => {
   let store: ReturnType<typeof createStore>
   let baseAtom: PrimitiveAtom<number>
-  let undoableAtom: ReturnType<typeof atomWithUndo<number>>
+  let undoableAtom: ReturnType<typeof withUndo<number>>
   let unsub: () => void
   const undoable = {
     undo() {
@@ -25,7 +25,7 @@ describe('atomWithUndo', () => {
   beforeEach(() => {
     store = createStore()
     baseAtom = atom(0)
-    undoableAtom = atomWithUndo(baseAtom, 3) // Limit history to 3 entries
+    undoableAtom = withUndo(baseAtom, 3) // Limit history to 3 entries
     unsub = store.sub(undoableAtom, () => {}) // Subscribe to trigger onMount
   })
 

@@ -1,8 +1,8 @@
 import { atom, createStore } from 'jotai/vanilla'
 import type { Atom, PrimitiveAtom } from 'jotai/vanilla'
-import { atomWithHistory } from '../src/atomWithHistory'
+import { withHistory } from '../src/withHistory'
 
-describe('atomWithHistory', () => {
+describe('withHistory', () => {
   let store: ReturnType<typeof createStore>
   let baseAtom: PrimitiveAtom<number>
   let historyAtom: Atom<number[]>
@@ -11,7 +11,7 @@ describe('atomWithHistory', () => {
   beforeEach(() => {
     store = createStore()
     baseAtom = atom(0) // Initial value is 0
-    historyAtom = atomWithHistory(baseAtom, 3) // Limit history to 3 entries
+    historyAtom = withHistory(baseAtom, 3) // Limit history to 3 entries
     unsub = store.sub(historyAtom, () => {}) // Subscribe to trigger onMount
   })
 

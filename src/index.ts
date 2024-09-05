@@ -1,2 +1,2 @@
-export { atomWithHistory } from './atomWithHistory'
-export { atomWithUndo } from './atomWithUndo'
+export { withHistory } from './withHistory'
+export { withUndo } from './withUndo'

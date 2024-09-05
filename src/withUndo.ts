@@ -1,6 +1,6 @@
 import { atom } from 'jotai/vanilla'
 import type { PrimitiveAtom } from 'jotai/vanilla'
-import { atomWithHistory } from './atomWithHistory'
+import { withHistory } from './withHistory'
 
 type Undoable = {
   undo: () => void
@@ -14,8 +14,8 @@ type Undoable = {
  * @param limit the maximum number of history states to keep
  * @returns an atom with undo/redo functionality
  */
-export function atomWithUndo<T>(targetAtom: PrimitiveAtom<T>, limit: number) {
-  const historyAtom = atomWithHistory(targetAtom, limit)
+export function withUndo<T>(targetAtom: PrimitiveAtom<T>, limit: number) {
+  const historyAtom = withHistory(targetAtom, limit)
   const UNDO = Symbol('undo')
   const REDO = Symbol('redo')
   type DoAction = typeof UNDO | typeof REDO

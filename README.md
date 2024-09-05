@@ -8,12 +8,12 @@
 npm i jotai-history
 ```
 
-## atomWithHistory
+## withHistory
 
 ### Signature
 
 ```ts
-function atomWithHistory<T>(targetAtom: Atom<T>, limit: number): Atom<T[]>
+function withHistory<T>(targetAtom: Atom<T>, limit: number): Atom<T[]>
 ```
 
 This function creates an atom that keeps a history of states for a given `targetAtom`. The `limit` parameter determines the maximum number of history states to keep.
@@ -25,10 +25,10 @@ The history atom tracks changes to the `targetAtom` and maintains a list of prev
 
 ```tsx
 import { atom, useAtomValue, useSetAtom } from 'jotai'
-import { atomWithHistory } from 'jotai/utils'
+import { withHistory } from 'jotai-history'
 
 const countAtom = atom(0)
-const countWithPrevious = atomWithHistory(countAtom, 2)
+const countWithPrevious = withHistory(countAtom, 2)
 
 export function CountComponent() {
   const [count, previousCount] = useAtomValue(countWithPrevious)
@@ -44,7 +44,7 @@ export function CountComponent() {
 }
 ```
 
-## atomWithUndo
+## withUndo
 
 ### Signature
 
@@ -55,10 +55,10 @@ type Undoable<T> = {
   canUndo: boolean
   canRedo: boolean
 }
-function atomWithUndo<T>(targetAtom: PrimitiveAtom<T>, limit: number): Atom<Undoable>
+function withUndo<T>(targetAtom: PrimitiveAtom<T>, limit: number): Atom<Undoable>
 ```
 
-`atomWithHistory` provides undo and redo capabilities for an atom. It keeps track of the value history of `targetAtom` and provides methods to move back and forth through that history.
+`withHistory` provides undo and redo capabilities for an atom. It keeps track of the value history of `targetAtom` and provides methods to move back and forth through that history.
 
 The returned object includes:
 
@@ -71,10 +71,10 @@ The returned object includes:
 
 ```tsx
 import { atom, useAtom, useAtomValue } from 'jotai'
-import { atomWithUndo } from 'jotai/utils'
+import { withUndo } from 'jotai-history'
 
 const counterAtom = atom(0)
-const undoCounterAtom = atomWithUndo(counterAtom, 5)
+const undoCounterAtom = withUndo(counterAtom, 5)
 
 export function CounterComponent() {
   const { undo, redo, canUndo, canRedo } = useAtomValue(undoCounterAtom)
@@ -100,4 +100,4 @@ https://codesandbox.io/p/sandbox/musing-orla-g6qj3q?file=%2Fsrc%2FApp.tsx%3A10%2
 
 ## Memory Management
 
-⚠️ Since `atomWithHistory` and `atomWithUndo` keeps a history of states, it's important to manage memory by setting a reasonable `limit`. Excessive history can lead to memory bloat, especially in applications with frequent state updates.
+⚠️ Since `withHistory` and `withUndo` keeps a history of states, it's important to manage memory by setting a reasonable `limit`. Excessive history can lead to memory bloat, especially in applications with frequent state updates.

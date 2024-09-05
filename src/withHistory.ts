@@ -6,7 +6,7 @@ import type { Atom } from 'jotai/vanilla'
  * @param limit the maximum number of history states to keep
  * @returns an atom with an array of history states
  */
-export function atomWithHistory<T>(targetAtom: Atom<T>, limit: number) {
+export function withHistory<T>(targetAtom: Atom<T>, limit: number) {
   const refAtom = atom(
     () => ({ history: [] as T[] }),
     (get, _set) => () => void (get(refAtom).history.length = 0)
