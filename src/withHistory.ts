@@ -9,7 +9,7 @@ import type { Atom } from 'jotai/vanilla'
 export function withHistory<T>(targetAtom: Atom<T>, limit: number) {
   const refAtom = atom(
     () => ({ history: [] as T[] }),
-    (get, _set) => () => void (get(refAtom).history.length = 0)
+    (get) => () => void (get(refAtom).history.length = 0)
   )
   refAtom.onMount = (mount) => mount()
   refAtom.debugPrivate = true
