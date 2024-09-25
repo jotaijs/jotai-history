@@ -6,7 +6,8 @@
     "esModuleInterop": true,
     "module": "es2015",
     "moduleResolution": "node",
-    "allowJs": true,
+    "allowJs": false,
+    "skipLibCheck": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noUncheckedIndexedAccess": true,
@@ -15,7 +16,9 @@
     "baseUrl": ".",
     "paths": {
       "jotai-history": ["./src"]
-    }
+    },
+    "types": ["node", "jest", "react", "react-dom"]
   },
-  "exclude": ["dist"]
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"]
 }
