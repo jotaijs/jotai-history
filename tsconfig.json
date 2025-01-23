@@ -4,21 +4,19 @@
     "target": "esnext",
     "downlevelIteration": true,
     "esModuleInterop": true,
-    "module": "es2015",
-    "moduleResolution": "node",
-    "allowJs": false,
-    "skipLibCheck": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowJs": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    "jsx": "react",
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "jotai-history": ["./src"]
-    },
-    "types": ["node", "jest", "react", "react-dom"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "include": ["src", "tests"],
+  "exclude": ["dist"]
 }

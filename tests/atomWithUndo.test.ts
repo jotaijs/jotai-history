@@ -1,6 +1,7 @@
 import { atom, createStore } from 'jotai/vanilla'
 import type { PrimitiveAtom } from 'jotai/vanilla'
-import { withUndo } from '../src/withUndo'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { withUndo } from 'jotai-history'
 
 describe('withUndo', () => {
   let store: ReturnType<typeof createStore>
@@ -85,7 +86,7 @@ describe('withUndo', () => {
   })
 
   it('rerenders when only undo/redo is changes', () => {
-    const spy = jest.fn()
+    const spy = vi.fn()
     store.sub(undoableAtom, spy)
     expect(undoable).toMatchObject({ canUndo: false, canRedo: false }) // start
     store.set(baseAtom, 1)
