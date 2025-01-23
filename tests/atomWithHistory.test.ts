@@ -1,6 +1,7 @@
 import { atom, createStore } from 'jotai/vanilla'
 import type { Atom, PrimitiveAtom } from 'jotai/vanilla'
-import { withHistory } from '../src/withHistory'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { withHistory } from 'jotai-history'
 
 describe('withHistory', () => {
   let store: ReturnType<typeof createStore>
