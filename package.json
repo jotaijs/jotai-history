@@ -1,7 +1,7 @@
 {
   "name": "jotai-history",
   "description": "👻⌛",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "author": "David Maskasky",
   "contributors": [],
@@ -45,6 +45,7 @@
     "fix": "pnpm run '/^fix:.*/'",
     "fix:format": "prettier --write .",
     "fix:lint": "eslint --config ./eslint.config.ts --fix .",
+    "pretest": "pnpm compile",
     "test": "pnpm run \"/^test:.*/\"",
     "test:format": "prettier --list-different .",
     "test:types": "tsc --noEmit",
