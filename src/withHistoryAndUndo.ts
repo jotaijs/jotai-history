@@ -10,16 +10,14 @@ import { REDO, RESET, UNDO } from './actions'
 import { History, withHistory } from './withHistory'
 import { type Indicators, withUndo } from './withUndo'
 
-type ResettableHistory<T> = History<T> & { reset: () => void }
-
 type WithHistoryAndUndo<T extends Atom<unknown>> =
   T extends WritableAtom<any, any[], any>
     ? WritableAtom<
-        ResettableHistory<ExtractAtomValue<T>> & Indicators,
+        History<ExtractAtomValue<T>> & Indicators,
         ExtractAtomArgs<T> | [RESET | UNDO | REDO],
         ExtractAtomResult<T> | void
       >
-    : WritableAtom<ResettableHistory<ExtractAtomValue<T>>, [RESET], void>
+    : WritableAtom<History<ExtractAtomValue<T>>, [RESET], void>
 
 export function withHistoryAndUndo<T extends Atom<unknown>>(
   targetAtom: T,
@@ -35,10 +33,9 @@ export function withHistoryAndUndo<T extends Atom<unknown>>(
     undoAtom.debugPrivate = true
   }
   return atom(
-    (get, { setSelf }) =>
+    (get) =>
       Object.assign(
         get(historyAtom),
-        { reset: () => setSelf(RESET) },
         isWritableAtom(targetAtom) && undoAtom ? get(undoAtom) : {}
       ),
     (_, set, ...args: unknown[]) => {

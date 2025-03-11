@@ -33,13 +33,6 @@ describe('withHistoryAndUndo', () => {
     expect([...store.get(historyUndoableAtom)]).toEqual([4, 3, 2]) // Only the most recent 3 states are kept
   })
 
-  it('resets history', () => {
-    store.set(baseAtom, 1)
-    store.set(baseAtom, 2)
-    store.get(historyUndoableAtom).reset()
-    expect([...store.get(historyUndoableAtom)]).toEqual([2]) // History should be reset
-  })
-
   it('supports undo operation', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
@@ -91,15 +84,6 @@ describe('withHistoryAndUndo', () => {
     store.set(baseAtom, 2)
     store.set(historyUndoableAtom, UNDO)
     store.set(historyUndoableAtom, RESET)
-    expect(store.get(historyUndoableAtom).canUndo).toBe(false)
-    expect(store.get(historyUndoableAtom).canRedo).toBe(false)
-  })
-
-  it('resets undo stack with history.reset()', () => {
-    store.set(baseAtom, 1)
-    store.set(baseAtom, 2)
-    store.set(historyUndoableAtom, UNDO)
-    store.get(historyUndoableAtom).reset()
     expect(store.get(historyUndoableAtom).canUndo).toBe(false)
     expect(store.get(historyUndoableAtom).canRedo).toBe(false)
   })
