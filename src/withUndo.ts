@@ -49,14 +49,14 @@ export function withUndo<Value, Args extends unknown[], Result>(
       const ref = get(refAtom)
       get(refreshAtom)
       if (ref.action) {
-        // recalculation caused by undo/redo
+        // recalculation caused by undo/redo/reset
         ref.action = null
       } else {
         // Remove future states if any
         ref.stack = ref.stack.slice(0, ref.index + 1)
-        // Push the current state to the history
+        // Push the current state to the stack
         ref.stack.push(history[0] as Value)
-        // Limit the history
+        // Limit the stack
         ref.stack = ref.stack.slice(-limit)
         // Move the current index to the end
         ref.index = ref.stack.length - 1
@@ -97,7 +97,9 @@ export function withUndo<Value, Args extends unknown[], Result>(
       if (action === UNDO) {
         if (get(baseAtom).canUndo) {
           ref.action = UNDO
+          get(historyAtom).shift()
           setCurrentState(--ref.index)
+          get(historyAtom).shift()
         }
       } else if (action === REDO) {
         if (get(baseAtom).canRedo) {
@@ -107,7 +109,10 @@ export function withUndo<Value, Args extends unknown[], Result>(
       } else if (action === RESET) {
         ref.action = RESET
         set(refAtom, action)
+      } else {
+        return
       }
+      set(refreshAtom, (v) => v + 1)
     }
   )
   return baseAtom

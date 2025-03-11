@@ -2,11 +2,12 @@ import { atom, createStore } from 'jotai/vanilla'
 import type { PrimitiveAtom } from 'jotai/vanilla'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { withHistory } from '../src/withHistory'
-import { withUndo } from '../src/withUndo'
+import { RESET, withUndo } from '../src/withUndo'
 
 describe('withUndo', () => {
   let store: ReturnType<typeof createStore>
   let baseAtom: PrimitiveAtom<number>
+  let historyAtom: ReturnType<typeof withHistory<number>>
   let undoableAtom: ReturnType<typeof withUndo<number, [number], void>>
   let unsub: () => void
   const undoable = {
@@ -27,8 +28,8 @@ describe('withUndo', () => {
   beforeEach(() => {
     store = createStore()
     baseAtom = atom(0)
-    const history = withHistory(baseAtom, 3)
-    undoableAtom = withUndo(history, baseAtom, 3) // Limit history to 3 entries
+    historyAtom = withHistory(baseAtom, 3)
+    undoableAtom = withUndo(historyAtom, baseAtom, 3) // Limit history to 3 entries
     unsub = store.sub(undoableAtom, () => {}) // Subscribe to trigger onMount
   })
 
@@ -143,5 +144,37 @@ describe('withUndo', () => {
     expect(store.get(baseAtom)).toBe(0)
     undoable.redo()
     expect(store.get(baseAtom)).toBe(1)
+  })
+
+  it('resets undo stack with RESET', () => {
+    store.set(baseAtom, 1)
+    store.set(baseAtom, 2)
+    store.set(undoableAtom, RESET)
+    expect(undoable.canUndo).toBe(false)
+    expect(undoable.canRedo).toBe(false)
+  })
+
+  it('removes the current state from the history on UNDO', () => {
+    store.set(baseAtom, 1)
+    store.set(baseAtom, 2)
+    undoable.undo()
+    expect([...store.get(historyAtom)]).toEqual([1, 0])
+  })
+
+  it('removes and adds states to history on UNDO and REDO', () => {
+    store.set(baseAtom, 1)
+    store.set(baseAtom, 2)
+    undoable.undo()
+    expect([...store.get(historyAtom)]).toEqual([1, 0])
+    undoable.redo()
+    expect([...store.get(historyAtom)]).toEqual([2, 1, 0])
+    store.set(baseAtom, 3)
+    expect([...store.get(historyAtom)]).toEqual([3, 2, 1])
+    undoable.undo()
+    undoable.undo()
+    expect([...store.get(historyAtom)]).toEqual([1])
+    undoable.redo()
+    undoable.redo()
+    expect([...store.get(historyAtom)]).toEqual([3, 2, 1])
   })
 })
