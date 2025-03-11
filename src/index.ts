@@ -1,2 +1,3 @@
-export { withHistory } from './withHistory'
-export { withUndo } from './withUndo'
+export { withHistoryAndUndo as withHistory } from './withHistoryAndUndo'
+export { UNDO, REDO } from './withUndo'
+export { RESET_HISTORY } from './withHistory'
