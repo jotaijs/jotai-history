@@ -1,12 +1,12 @@
 import { atom, createStore } from 'jotai/vanilla'
 import type { PrimitiveAtom } from 'jotai/vanilla'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { withUndo } from 'jotai-history'
+import { withUndo } from '../src/withUndo'
 
 describe('withUndo', () => {
   let store: ReturnType<typeof createStore>
   let baseAtom: PrimitiveAtom<number>
-  let undoableAtom: ReturnType<typeof withUndo<number>>
+  let undoableAtom: ReturnType<typeof withUndo<number, [number], void>>
   let unsub: () => void
   const undoable = {
     undo() {
@@ -107,5 +107,33 @@ describe('withUndo', () => {
     undoable.redo()
     expect(undoable).toMatchObject({ canUndo: true, canRedo: false }) // no-change
     expect(spy).toBeCalledTimes(5)
+  })
+
+  it('supports custom getArgs', () => {
+    const baseAtom = atom(0, (_, set, a: number, b: number = 0) => {
+      set(baseAtom, a + b)
+    })
+    const undoableAtom = withUndo(baseAtom, 3, (value) => [value, 0] as const)
+    const undoable = {
+      undo() {
+        return store.get(undoableAtom).undo()
+      },
+      redo() {
+        return store.get(undoableAtom).redo()
+      },
+      get canUndo() {
+        return store.get(undoableAtom).canUndo
+      },
+      get canRedo() {
+        return store.get(undoableAtom).canRedo
+      },
+    }
+    store.sub(undoableAtom, () => {})
+    store.set(baseAtom, 1)
+    expect(store.get(baseAtom)).toBe(1)
+    undoable.undo()
+    expect(store.get(baseAtom)).toBe(0)
+    undoable.redo()
+    expect(store.get(baseAtom)).toBe(1)
   })
 })

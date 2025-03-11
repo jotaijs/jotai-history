@@ -25,7 +25,7 @@ export default tseslint.config(
     rules: {
       curly: ['warn', 'multi-line', 'consistent'],
       eqeqeq: 'error',
-      'no-console': 'off',
+      'no-console': 'warn',
       'no-inner-declarations': 'off',
       'no-var': 'error',
       'prefer-const': 'error',
