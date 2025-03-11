@@ -38,11 +38,4 @@ describe('withHistory', () => {
     unsub = store.sub(historyAtom, () => {}) // Subscribe to mount
     expect([...store.get(historyAtom)]).toEqual([1]) // History should be cleared
   })
-
-  it('resets history', () => {
-    store.set(baseAtom, 1)
-    store.set(baseAtom, 2)
-    store.get(historyAtom).reset()
-    expect([...store.get(historyAtom)]).toEqual([2]) // History should be reset
-  })
 })

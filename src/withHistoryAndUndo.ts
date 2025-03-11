@@ -6,8 +6,10 @@ import type {
   WritableAtom,
 } from 'jotai/vanilla'
 import { atom } from 'jotai/vanilla'
-import { RESET_HISTORY, ResettableHistory, withHistory } from './withHistory'
+import { History, RESET_HISTORY, withHistory } from './withHistory'
 import { REDO, RESET, UNDO, type Undoable, withUndo } from './withUndo'
+
+type ResettableHistory<T> = History<T> & { reset: () => void }
 
 type WithHistoryAndUndo<T extends Atom<unknown>> =
   T extends WritableAtom<any, any[], any>
@@ -36,9 +38,10 @@ export function withHistoryAndUndo<T extends Atom<unknown>>(
     undoAtom.debugPrivate = true
   }
   return atom(
-    (get) =>
+    (get, { setSelf }) =>
       Object.assign(
         get(historyAtom),
+        { reset: () => setSelf(RESET_HISTORY) },
         isWritableAtom(targetAtom) && undoAtom ? get(undoAtom) : {}
       ),
     (_, set, ...args: unknown[]) => {
