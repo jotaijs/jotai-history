@@ -1,8 +1,6 @@
 import type { Atom, WritableAtom } from 'jotai'
 import { atom } from 'jotai/vanilla'
-
-export const RESET_HISTORY = Symbol('reset history')
-export type RESET_HISTORY = typeof RESET_HISTORY
+import { RESET } from './actions'
 
 export type History<Value> = Value[]
 
@@ -14,7 +12,7 @@ export type History<Value> = Value[]
 export function withHistory<Value>(
   targetAtom: Atom<Value>,
   limit: number
-): WritableAtom<History<Value>, [RESET_HISTORY], void> {
+): WritableAtom<History<Value>, [RESET], void> {
   const refreshAtom = atom(0)
   refreshAtom.debugPrivate = true
   const historyAtom = {
@@ -32,8 +30,8 @@ export function withHistory<Value>(
       const ref = get(historyAtom)
       return (ref.history = [get(targetAtom), ...ref.history].slice(0, limit))
     },
-    (_, set, action: RESET_HISTORY) => {
-      if (action === RESET_HISTORY) {
+    (_, set, action: RESET) => {
+      if (action === RESET) {
         set(historyAtom)
       }
     }

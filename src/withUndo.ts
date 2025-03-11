@@ -1,19 +1,9 @@
 import type { WritableAtom } from 'jotai/vanilla'
 import { atom } from 'jotai/vanilla'
+import { REDO, RESET, UNDO } from './actions'
 import type { withHistory } from './withHistory'
 
-export const UNDO = Symbol('undo')
-export type UNDO = typeof UNDO
-
-export const REDO = Symbol('redo')
-export type REDO = typeof REDO
-
-export const RESET = Symbol('reset')
-export type RESET = typeof RESET
-
-export type Undoable = {
-  undo: () => void
-  redo: () => void
+export type Indicators = {
   canUndo: boolean
   canRedo: boolean
 }
@@ -21,14 +11,14 @@ export type Undoable = {
 /**
  * @param targetAtom a primitive atom or equivalent
  * @param limit the maximum number of history states to keep
- * @returns an atom with undo/redo functionality
+ * @returns an atom with undo/redo capabilities
  */
 export function withUndo<Value, Args extends unknown[], Result>(
   historyAtom: ReturnType<typeof withHistory>,
   targetAtom: WritableAtom<Value, Args, Result>,
   limit: number,
   getArgs?: (value: Value) => Args
-): WritableAtom<Undoable, [UNDO | REDO | RESET], void> {
+): WritableAtom<Indicators, [UNDO | REDO | RESET], void> {
   const createRef = () => ({
     index: 0,
     stack: [] as Value[],
@@ -78,10 +68,8 @@ export function withUndo<Value, Args extends unknown[], Result>(
     const ref = get(updateRefAtom)
     return ref.index < ref.stack.length - 1
   })
-  const baseAtom = atom<Undoable, [UNDO | REDO | RESET], void>(
-    (get, { setSelf }) => ({
-      undo: () => setSelf(UNDO),
-      redo: () => setSelf(REDO),
+  const baseAtom = atom<Indicators, [UNDO | REDO | RESET], void>(
+    (get) => ({
       canUndo: get(canUndoAtom),
       canRedo: get(canRedoAtom),
     }),
@@ -95,14 +83,14 @@ export function withUndo<Value, Args extends unknown[], Result>(
         }
       }
       if (action === UNDO) {
-        if (get(baseAtom).canUndo) {
+        if (get(canUndoAtom)) {
           ref.action = UNDO
           get(historyAtom).shift()
           setCurrentState(--ref.index)
           get(historyAtom).shift()
         }
       } else if (action === REDO) {
-        if (get(baseAtom).canRedo) {
+        if (get(canRedoAtom)) {
           ref.action = REDO
           setCurrentState(++ref.index)
         }

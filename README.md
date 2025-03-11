@@ -1,6 +1,6 @@
 #  History
 
-[jotai-history](https://jotai.org/docs/extensions/history) is a utility package that provides a history of Jotai atom states, making it easy to track and manage changes over time. It also includes undo and redo actions to revert or restore previous states as needed.
+[jotai-history](https://jotai.org/docs/extensions/history) is a utility package that provides a history of Jotai atom states, making it easy to track and manage changes over time. It also includes support for undo and redo actions to revert or restore previous states as needed.
 
 ## Installation
 
@@ -11,13 +11,7 @@ npm i jotai-history
 ## withHistory
 
 ```ts
-type Actions<T> = {
-  // Clears the history
-  reset: () => void
-  // Reverts to the previous state
-  undo: () => void
-  // Advances to the next state
-  redo: () => void
+type Indicators<T> = {
   canUndo: boolean
   canRedo: boolean
 }
@@ -25,20 +19,22 @@ type Actions<T> = {
 function withHistory<T>(
   targetAtom: Atom<T>,
   limit: number
-): Atom<T[] & Actions<T>>
+): Atom<T[] & Indicators<T>>
 ```
 
 **Description**
 
 `withHistory` creates an atom that tracks the history of states for a given `targetAtom`. The `limit` parameter specifies how many past states to keep in memory. Whenever the `targetAtom` changes, its new state is immediately added to the history, up to the specified limit.
 
-### Actions
+### Action Symbols
 
-- **reset**  
-  Clears the entire history, removing all previous states.
+- **RESET**  
+  Clears the entire history, removing all previous states including the undo/redo stack.
 
-- **undo** and **redo**  
+- **UNDO** and **REDO**  
   Move the `targetAtom` backward or forward in its history, respectively.
+
+### Indicators
 
 - **canUndo** and **canRedo**  
   Booleans indicating whether undo or redo actions are currently possible. These can be used to disable buttons or conditionally trigger actions.
@@ -46,8 +42,8 @@ function withHistory<T>(
 ### Usage
 
 ```jsx
-import { atom, useAtomValue, useSetAtom } from 'jotai'
-import { withHistory } from 'jotai-history'
+import { atom, useAtom, useSetAtom } from 'jotai'
+import { REDO, RESET, UNDO, withHistory } from 'jotai-history'
 
 const countAtom = atom(0)
 
@@ -58,7 +54,7 @@ const limit = 2
 const countWithHistory = withHistory(countAtom, limit)
 
 function CountComponent() {
-  const history = useAtomValue(countWithHistory)
+  const [history, dispatch] = useAtom(countWithHistory)
   const [currentCount, previousCount] = history
   const setCount = useSetAtom(countAtom)
 
@@ -68,11 +64,11 @@ function CountComponent() {
       <p>Current Count: {currentCount}</p>
       <p>Previous Count: {previousCount}</p>
       
-      <button onClick={history.reset}>Reset History</button>
-      <button onClick={history.undo} disabled={!history.canUndo}>
+      <button onClick={() => dispatch(RESET)}>Reset History</button>
+      <button onClick={() => dispatch(UNDO)} disabled={!history.canUndo}>
         Undo
       </button>
-      <button onClick={history.redo} disabled={!history.canRedo}>
+      <button onClick={() => dispatch(REDO)} disabled={!history.canRedo}>
         Redo
       </button>
     </>

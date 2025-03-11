@@ -1,9 +1,8 @@
 import { atom, createStore } from 'jotai/vanilla'
 import type { PrimitiveAtom } from 'jotai/vanilla'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { RESET_HISTORY } from '../src/withHistory'
+import { REDO, RESET, UNDO } from '../src/actions'
 import { withHistoryAndUndo } from '../src/withHistoryAndUndo'
-import { REDO, UNDO } from '../src/withUndo'
 
 describe('withHistoryAndUndo', () => {
   let store: ReturnType<typeof createStore>
@@ -11,20 +10,6 @@ describe('withHistoryAndUndo', () => {
   let historyUndoableAtom: ReturnType<
     typeof withHistoryAndUndo<PrimitiveAtom<number>>
   >
-  const undoable = {
-    undo() {
-      return store.get(historyUndoableAtom).undo()
-    },
-    redo() {
-      return store.get(historyUndoableAtom).redo()
-    },
-    get canUndo() {
-      return store.get(historyUndoableAtom).canUndo
-    },
-    get canRedo() {
-      return store.get(historyUndoableAtom).canRedo
-    },
-  }
 
   beforeEach(() => {
     store = createStore()
@@ -58,31 +43,31 @@ describe('withHistoryAndUndo', () => {
   it('supports undo operation', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
-    undoable.undo()
+    store.set(historyUndoableAtom, UNDO)
     expect(store.get(baseAtom)).toBe(1) // Should undo to the previous value
   })
 
   it('supports redo operation', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
-    undoable.undo()
-    undoable.redo()
+    store.set(historyUndoableAtom, UNDO)
+    store.set(historyUndoableAtom, REDO)
     expect(store.get(baseAtom)).toBe(2) // Should redo to the value before undo
   })
 
   it('checks undo and redo availability', () => {
-    expect(undoable.canUndo).toBe(false) // No undo initially
-    expect(undoable.canRedo).toBe(false) // No redo initially
+    expect(store.get(historyUndoableAtom).canUndo).toBe(false) // No undo initially
+    expect(store.get(historyUndoableAtom).canRedo).toBe(false) // No redo initially
     store.set(baseAtom, 1)
-    expect(undoable.canUndo).toBe(true) // Undo becomes available
-    undoable.undo()
-    expect(undoable.canRedo).toBe(true) // Redo becomes available after undo
+    expect(store.get(historyUndoableAtom).canUndo).toBe(true) // Undo becomes available
+    store.set(historyUndoableAtom, UNDO)
+    expect(store.get(historyUndoableAtom).canRedo).toBe(true) // Redo becomes available after undo
   })
 
-  it('resets history with RESET_HISTORY', () => {
+  it('resets history with RESET', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
-    store.set(historyUndoableAtom, RESET_HISTORY)
+    store.set(historyUndoableAtom, RESET)
     expect([...store.get(historyUndoableAtom)]).toEqual([2]) // History should be reset
   })
 
@@ -101,13 +86,13 @@ describe('withHistoryAndUndo', () => {
     expect(store.get(baseAtom)).toBe(2) // Should redo to the value before undo
   })
 
-  it('resets undo stack with RESET_HISTORY', () => {
+  it('resets undo stack with RESET', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
     store.set(historyUndoableAtom, UNDO)
-    store.set(historyUndoableAtom, RESET_HISTORY)
-    expect(undoable.canUndo).toBe(false)
-    expect(undoable.canRedo).toBe(false)
+    store.set(historyUndoableAtom, RESET)
+    expect(store.get(historyUndoableAtom).canUndo).toBe(false)
+    expect(store.get(historyUndoableAtom).canRedo).toBe(false)
   })
 
   it('resets undo stack with history.reset()', () => {
@@ -115,7 +100,7 @@ describe('withHistoryAndUndo', () => {
     store.set(baseAtom, 2)
     store.set(historyUndoableAtom, UNDO)
     store.get(historyUndoableAtom).reset()
-    expect(undoable.canUndo).toBe(false)
-    expect(undoable.canRedo).toBe(false)
+    expect(store.get(historyUndoableAtom).canUndo).toBe(false)
+    expect(store.get(historyUndoableAtom).canRedo).toBe(false)
   })
 })

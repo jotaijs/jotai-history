@@ -1,8 +1,9 @@
 import { atom, createStore } from 'jotai/vanilla'
 import type { PrimitiveAtom } from 'jotai/vanilla'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { REDO, RESET, UNDO } from '../src/actions'
 import { withHistory } from '../src/withHistory'
-import { RESET, withUndo } from '../src/withUndo'
+import { withUndo } from '../src/withUndo'
 
 describe('withUndo', () => {
   let store: ReturnType<typeof createStore>
@@ -10,20 +11,6 @@ describe('withUndo', () => {
   let historyAtom: ReturnType<typeof withHistory<number>>
   let undoableAtom: ReturnType<typeof withUndo<number, [number], void>>
   let unsub: () => void
-  const undoable = {
-    undo() {
-      return store.get(undoableAtom).undo()
-    },
-    redo() {
-      return store.get(undoableAtom).redo()
-    },
-    get canUndo() {
-      return store.get(undoableAtom).canUndo
-    },
-    get canRedo() {
-      return store.get(undoableAtom).canRedo
-    },
-  }
 
   beforeEach(() => {
     store = createStore()
@@ -36,15 +23,15 @@ describe('withUndo', () => {
   it('supports undo operation', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
-    undoable.undo()
+    store.set(undoableAtom, UNDO)
     expect(store.get(baseAtom)).toBe(1) // Should undo to the previous value
   })
 
   it('supports redo operation', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
-    undoable.undo()
-    undoable.redo()
+    store.set(undoableAtom, UNDO)
+    store.set(undoableAtom, REDO)
     expect(store.get(baseAtom)).toBe(2) // Should redo to the value before undo
   })
 
@@ -55,60 +42,81 @@ describe('withUndo', () => {
     store.set(baseAtom, 3)
     store.set(baseAtom, 4)
 
-    expect(undoable.canUndo).toBe(true)
-    expect(undoable.canRedo).toBe(false)
-    undoable.undo()
-    expect(undoable.canUndo).toBe(true)
-    undoable.undo()
+    expect(store.get(undoableAtom).canUndo).toBe(true)
+    expect(store.get(undoableAtom).canRedo).toBe(false)
+    store.set(undoableAtom, UNDO)
+    expect(store.get(undoableAtom).canUndo).toBe(true)
+    store.set(undoableAtom, UNDO)
 
-    expect(undoable.canUndo).toBe(false) // Cannot undo beyond limit
-    expect(undoable.canRedo).toBe(true)
-    undoable.redo()
-    expect(undoable.canUndo).toBe(true)
-    undoable.redo()
+    expect(store.get(undoableAtom).canUndo).toBe(false) // Cannot undo beyond limit
+    expect(store.get(undoableAtom).canRedo).toBe(true)
+    store.set(undoableAtom, REDO)
+    expect(store.get(undoableAtom).canUndo).toBe(true)
+    store.set(undoableAtom, REDO)
 
-    expect(undoable.canUndo).toBe(true)
-    expect(undoable.canRedo).toBe(false) // Cannot redo beyond limit
+    expect(store.get(undoableAtom).canUndo).toBe(true)
+    expect(store.get(undoableAtom).canRedo).toBe(false) // Cannot redo beyond limit
   })
 
   it('checks undo and redo availability', () => {
-    expect(undoable.canUndo).toBe(false) // No undo initially
-    expect(undoable.canRedo).toBe(false) // No redo initially
+    expect(store.get(undoableAtom).canUndo).toBe(false) // No undo initially
+    expect(store.get(undoableAtom).canRedo).toBe(false) // No redo initially
     store.set(baseAtom, 1)
-    expect(undoable.canUndo).toBe(true) // Undo becomes available
-    undoable.undo()
-    expect(undoable.canRedo).toBe(true) // Redo becomes available after undo
+    expect(store.get(undoableAtom).canUndo).toBe(true) // Undo becomes available
+    store.set(undoableAtom, UNDO)
+    expect(store.get(undoableAtom).canRedo).toBe(true) // Redo becomes available after undo
   })
 
   it('cleans up history on unmount', () => {
     store.set(baseAtom, 1)
-    expect(undoable.canUndo).toBe(true) // Can undo before unmount
+    expect(store.get(undoableAtom).canUndo).toBe(true) // Can undo before unmount
     unsub() // Unsubscribe to unmount
     unsub = store.sub(undoableAtom, () => {}) // Subscribe to mount
-    expect(undoable.canUndo).toBe(false) // Cannot undo after unmount
+    expect(store.get(undoableAtom).canUndo).toBe(false) // Cannot undo after unmount
   })
 
   it('rerenders when only undo/redo is changes', () => {
     const spy = vi.fn()
     store.sub(undoableAtom, spy)
-    expect(undoable).toMatchObject({ canUndo: false, canRedo: false }) // start
+    expect(store.get(undoableAtom)).toMatchObject({
+      canUndo: false,
+      canRedo: false,
+    }) // start
     store.set(baseAtom, 1)
-    expect(undoable).toMatchObject({ canUndo: true, canRedo: false }) // canUndo changed
+    expect(store.get(undoableAtom)).toMatchObject({
+      canUndo: true,
+      canRedo: false,
+    }) // canUndo changed
     expect(spy).toBeCalledTimes(1)
     store.set(baseAtom, 2)
-    expect(undoable).toMatchObject({ canUndo: true, canRedo: false }) // no-change
+    expect(store.get(undoableAtom)).toMatchObject({
+      canUndo: true,
+      canRedo: false,
+    }) // no-change
     expect(spy).toBeCalledTimes(1)
-    undoable.undo()
-    expect(undoable).toMatchObject({ canUndo: true, canRedo: true }) // canRedo changed
+    store.set(undoableAtom, UNDO)
+    expect(store.get(undoableAtom)).toMatchObject({
+      canUndo: true,
+      canRedo: true,
+    }) // canRedo changed
     expect(spy).toBeCalledTimes(2)
-    undoable.undo()
-    expect(undoable).toMatchObject({ canUndo: false, canRedo: true }) // canUndo changed
+    store.set(undoableAtom, UNDO)
+    expect(store.get(undoableAtom)).toMatchObject({
+      canUndo: false,
+      canRedo: true,
+    }) // canUndo changed
     expect(spy).toBeCalledTimes(3)
-    undoable.redo()
-    expect(undoable).toMatchObject({ canUndo: true, canRedo: true }) // canUndo changed
+    store.set(undoableAtom, REDO)
+    expect(store.get(undoableAtom)).toMatchObject({
+      canUndo: true,
+      canRedo: true,
+    }) // canUndo changed
     expect(spy).toBeCalledTimes(4)
-    undoable.redo()
-    expect(undoable).toMatchObject({ canUndo: true, canRedo: false }) // no-change
+    store.set(undoableAtom, REDO)
+    expect(store.get(undoableAtom)).toMatchObject({
+      canUndo: true,
+      canRedo: false,
+    }) // no-change
     expect(spy).toBeCalledTimes(5)
   })
 
@@ -123,26 +131,12 @@ describe('withUndo', () => {
       3,
       (value) => [value, 0] as const
     )
-    const undoable = {
-      undo() {
-        return store.get(undoableAtom).undo()
-      },
-      redo() {
-        return store.get(undoableAtom).redo()
-      },
-      get canUndo() {
-        return store.get(undoableAtom).canUndo
-      },
-      get canRedo() {
-        return store.get(undoableAtom).canRedo
-      },
-    }
     store.sub(undoableAtom, () => {})
     store.set(baseAtom, 1)
     expect(store.get(baseAtom)).toBe(1)
-    undoable.undo()
+    store.set(undoableAtom, UNDO)
     expect(store.get(baseAtom)).toBe(0)
-    undoable.redo()
+    store.set(undoableAtom, REDO)
     expect(store.get(baseAtom)).toBe(1)
   })
 
@@ -150,31 +144,31 @@ describe('withUndo', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
     store.set(undoableAtom, RESET)
-    expect(undoable.canUndo).toBe(false)
-    expect(undoable.canRedo).toBe(false)
+    expect(store.get(undoableAtom).canUndo).toBe(false)
+    expect(store.get(undoableAtom).canRedo).toBe(false)
   })
 
   it('removes the current state from the history on UNDO', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
-    undoable.undo()
+    store.set(undoableAtom, UNDO)
     expect([...store.get(historyAtom)]).toEqual([1, 0])
   })
 
   it('removes and adds states to history on UNDO and REDO', () => {
     store.set(baseAtom, 1)
     store.set(baseAtom, 2)
-    undoable.undo()
+    store.set(undoableAtom, UNDO)
     expect([...store.get(historyAtom)]).toEqual([1, 0])
-    undoable.redo()
+    store.set(undoableAtom, REDO)
     expect([...store.get(historyAtom)]).toEqual([2, 1, 0])
     store.set(baseAtom, 3)
     expect([...store.get(historyAtom)]).toEqual([3, 2, 1])
-    undoable.undo()
-    undoable.undo()
+    store.set(undoableAtom, UNDO)
+    store.set(undoableAtom, UNDO)
     expect([...store.get(historyAtom)]).toEqual([1])
-    undoable.redo()
-    undoable.redo()
+    store.set(undoableAtom, REDO)
+    store.set(undoableAtom, REDO)
     expect([...store.get(historyAtom)]).toEqual([3, 2, 1])
   })
 })

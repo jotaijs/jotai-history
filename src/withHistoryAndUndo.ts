@@ -6,23 +6,20 @@ import type {
   WritableAtom,
 } from 'jotai/vanilla'
 import { atom } from 'jotai/vanilla'
-import { History, RESET_HISTORY, withHistory } from './withHistory'
-import { REDO, RESET, UNDO, type Undoable, withUndo } from './withUndo'
+import { REDO, RESET, UNDO } from './actions'
+import { History, withHistory } from './withHistory'
+import { type Indicators, withUndo } from './withUndo'
 
 type ResettableHistory<T> = History<T> & { reset: () => void }
 
 type WithHistoryAndUndo<T extends Atom<unknown>> =
   T extends WritableAtom<any, any[], any>
     ? WritableAtom<
-        ResettableHistory<ExtractAtomValue<T>> & Undoable,
-        ExtractAtomArgs<T> | [RESET_HISTORY | UNDO | REDO],
+        ResettableHistory<ExtractAtomValue<T>> & Indicators,
+        ExtractAtomArgs<T> | [RESET | UNDO | REDO],
         ExtractAtomResult<T> | void
       >
-    : WritableAtom<
-        ResettableHistory<ExtractAtomValue<T>>,
-        [RESET_HISTORY],
-        void
-      >
+    : WritableAtom<ResettableHistory<ExtractAtomValue<T>>, [RESET], void>
 
 export function withHistoryAndUndo<T extends Atom<unknown>>(
   targetAtom: T,
@@ -41,15 +38,15 @@ export function withHistoryAndUndo<T extends Atom<unknown>>(
     (get, { setSelf }) =>
       Object.assign(
         get(historyAtom),
-        { reset: () => setSelf(RESET_HISTORY) },
+        { reset: () => setSelf(RESET) },
         isWritableAtom(targetAtom) && undoAtom ? get(undoAtom) : {}
       ),
     (_, set, ...args: unknown[]) => {
       const [action] = args
-      if (action === RESET_HISTORY) {
+      if (action === RESET) {
         set(historyAtom, action)
         if (undoAtom) {
-          set(undoAtom, RESET)
+          set(undoAtom, action)
         }
       } else if (!isWritableAtom(targetAtom) || !undoAtom) {
         return
