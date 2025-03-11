@@ -1,12 +1,15 @@
 import type { WritableAtom } from 'jotai/vanilla'
 import { atom } from 'jotai/vanilla'
-import { withHistory } from './withHistory'
+import type { withHistory } from './withHistory'
 
 export const UNDO = Symbol('undo')
 export type UNDO = typeof UNDO
 
 export const REDO = Symbol('redo')
 export type REDO = typeof REDO
+
+export const RESET = Symbol('reset')
+export type RESET = typeof RESET
 
 export type Undoable = {
   undo: () => void
@@ -21,23 +24,24 @@ export type Undoable = {
  * @returns an atom with undo/redo functionality
  */
 export function withUndo<Value, Args extends unknown[], Result>(
+  historyAtom: ReturnType<typeof withHistory>,
   targetAtom: WritableAtom<Value, Args, Result>,
   limit: number,
   getArgs?: (value: Value) => Args
-): WritableAtom<Undoable, [UNDO | REDO], void> {
-  const historyAtom = withHistory(targetAtom, limit)
-
+): WritableAtom<Undoable, [UNDO | REDO | RESET], void> {
   const createRef = () => ({
     index: 0,
     stack: [] as Value[],
-    action: null as UNDO | REDO | null,
+    action: null as UNDO | REDO | RESET | null,
   })
   const refreshAtom = atom(0)
-  const refAtom = atom(createRef, (get, set) => {
-    void Object.assign(get(refAtom), createRef())
-    set(refreshAtom, (v) => v + 1)
+  const refAtom = atom(createRef, (get, set, action: RESET) => {
+    if (action === RESET) {
+      void Object.assign(get(refAtom), createRef())
+      set(refreshAtom, (v) => v + 1)
+    }
   })
-  refAtom.onMount = (unmount) => unmount
+  refAtom.onMount = (setAtom) => () => setAtom(RESET)
   refAtom.debugPrivate = true
   const updateRefAtom = atom(
     (get) => {
@@ -59,13 +63,10 @@ export function withUndo<Value, Args extends unknown[], Result>(
       }
       return { ...ref }
     },
-    (get) => {
+    (get, set) => {
       const ref = get(refAtom)
       ref.stack = [get(targetAtom)]
-      return () => {
-        ref.index = 0
-        ref.stack.length = 0
-      }
+      return () => set(refAtom, RESET)
     }
   )
   updateRefAtom.onMount = (mount) => mount()
@@ -77,7 +78,7 @@ export function withUndo<Value, Args extends unknown[], Result>(
     const ref = get(updateRefAtom)
     return ref.index < ref.stack.length - 1
   })
-  const baseAtom = atom<Undoable, [UNDO | REDO], void>(
+  const baseAtom = atom<Undoable, [UNDO | REDO | RESET], void>(
     (get, { setSelf }) => ({
       undo: () => setSelf(UNDO),
       redo: () => setSelf(REDO),
@@ -103,6 +104,9 @@ export function withUndo<Value, Args extends unknown[], Result>(
           ref.action = REDO
           setCurrentState(++ref.index)
         }
+      } else if (action === RESET) {
+        ref.action = RESET
+        set(refAtom, action)
       }
     }
   )

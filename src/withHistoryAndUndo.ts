@@ -7,7 +7,7 @@ import type {
 } from 'jotai/vanilla'
 import { atom } from 'jotai/vanilla'
 import { RESET_HISTORY, ResettableHistory, withHistory } from './withHistory'
-import { REDO, UNDO, type Undoable, withUndo } from './withUndo'
+import { REDO, RESET, UNDO, type Undoable, withUndo } from './withUndo'
 
 type WithHistoryAndUndo<T extends Atom<unknown>> =
   T extends WritableAtom<any, any[], any>
@@ -28,24 +28,27 @@ export function withHistoryAndUndo<T extends Atom<unknown>>(
 ): WithHistoryAndUndo<T> {
   const historyAtom = withHistory(targetAtom, limit)
   historyAtom.debugPrivate = true
-  let undoAtom: ReturnType<typeof withUndo>
+  let undoAtom: ReturnType<typeof withUndo> | undefined
   if (isWritableAtom(targetAtom)) {
     // eslint-disable-next-line prefer-rest-params
     const getArgs = arguments[2] ?? Array.of
-    undoAtom = withUndo(targetAtom, limit, getArgs)
+    undoAtom = withUndo(historyAtom, targetAtom, limit, getArgs)
     undoAtom.debugPrivate = true
   }
   return atom(
     (get) =>
       Object.assign(
         get(historyAtom),
-        isWritableAtom(targetAtom) ? get(undoAtom) : {}
+        isWritableAtom(targetAtom) && undoAtom ? get(undoAtom) : {}
       ),
     (_, set, ...args: unknown[]) => {
       const [action] = args
       if (action === RESET_HISTORY) {
         set(historyAtom, action)
-      } else if (!isWritableAtom(targetAtom)) {
+        if (undoAtom) {
+          set(undoAtom, RESET)
+        }
+      } else if (!isWritableAtom(targetAtom) || !undoAtom) {
         return
       } else if (action === UNDO || action === REDO) {
         set(undoAtom, action)

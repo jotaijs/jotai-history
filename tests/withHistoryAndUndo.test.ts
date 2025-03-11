@@ -100,4 +100,13 @@ describe('withHistoryAndUndo', () => {
     store.set(historyUndoableAtom, REDO)
     expect(store.get(baseAtom)).toBe(2) // Should redo to the value before undo
   })
+
+  it('resets undo stack with RESET_HISTORY', () => {
+    store.set(baseAtom, 1)
+    store.set(baseAtom, 2)
+    store.set(historyUndoableAtom, UNDO)
+    store.set(historyUndoableAtom, RESET_HISTORY)
+    expect(undoable.canUndo).toBe(false)
+    expect(undoable.canRedo).toBe(false)
+  })
 })

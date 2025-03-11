@@ -1,6 +1,7 @@
 import { atom, createStore } from 'jotai/vanilla'
 import type { PrimitiveAtom } from 'jotai/vanilla'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { withHistory } from '../src/withHistory'
 import { withUndo } from '../src/withUndo'
 
 describe('withUndo', () => {
@@ -26,7 +27,8 @@ describe('withUndo', () => {
   beforeEach(() => {
     store = createStore()
     baseAtom = atom(0)
-    undoableAtom = withUndo(baseAtom, 3) // Limit history to 3 entries
+    const history = withHistory(baseAtom, 3)
+    undoableAtom = withUndo(history, baseAtom, 3) // Limit history to 3 entries
     unsub = store.sub(undoableAtom, () => {}) // Subscribe to trigger onMount
   })
 
@@ -113,7 +115,13 @@ describe('withUndo', () => {
     const baseAtom = atom(0, (_, set, a: number, b: number = 0) => {
       set(baseAtom, a + b)
     })
-    const undoableAtom = withUndo(baseAtom, 3, (value) => [value, 0] as const)
+    const historyAtom = withHistory(baseAtom, 3)
+    const undoableAtom = withUndo(
+      historyAtom,
+      baseAtom,
+      3,
+      (value) => [value, 0] as const
+    )
     const undoable = {
       undo() {
         return store.get(undoableAtom).undo()
