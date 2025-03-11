@@ -1,6 +1,7 @@
 import { atom, createStore } from 'jotai/vanilla'
 import type { PrimitiveAtom } from 'jotai/vanilla'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { RESET } from '../src/actions'
 import { withHistory } from '../src/withHistory'
 
 describe('withHistory', () => {
@@ -37,5 +38,12 @@ describe('withHistory', () => {
     unsub() // Unsubscribe to unmount
     unsub = store.sub(historyAtom, () => {}) // Subscribe to mount
     expect([...store.get(historyAtom)]).toEqual([1]) // History should be cleared
+  })
+
+  it('resets history with RESET', () => {
+    store.set(baseAtom, 1)
+    store.set(baseAtom, 2)
+    store.set(historyAtom, RESET)
+    expect([...store.get(historyAtom)]).toEqual([2]) // History should be reset
   })
 })

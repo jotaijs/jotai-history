@@ -68,7 +68,7 @@ export function withUndo<Value, Args extends unknown[], Result>(
     const ref = get(updateRefAtom)
     return ref.index < ref.stack.length - 1
   })
-  const baseAtom = atom<Indicators, [UNDO | REDO | RESET], void>(
+  return atom<Indicators, [UNDO | REDO | RESET], void>(
     (get) => ({
       canUndo: get(canUndoAtom),
       canRedo: get(canRedoAtom),
@@ -103,5 +103,4 @@ export function withUndo<Value, Args extends unknown[], Result>(
       set(refreshAtom, (v) => v + 1)
     }
   )
-  return baseAtom
 }
