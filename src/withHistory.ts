@@ -15,25 +15,22 @@ export function withHistory<Value>(
 ): WritableAtom<History<Value>, [RESET], void> {
   const refreshAtom = atom(0)
   refreshAtom.debugPrivate = true
-  const historyAtom = {
-    read: (get) => (get(refreshAtom), { history: [] }),
-    write: (get, set) => {
-      get(historyAtom).history.length = 0
-      set(refreshAtom, (v) => v + 1)
-    },
-    onMount: (reset) => reset,
-    debugPrivate: true,
-    init: 1, // dirty hack to bypass hasInitialValue
-  } as WritableAtom<{ history: Value[] }, [], void>
-  return atom(
+  const historyAtom = atom<{ history: History<Value> }>(() => ({ history: [] }))
+  historyAtom.debugPrivate = true
+  const refreshableHistoryAtom = atom(
     (get) => {
+      get(refreshAtom)
       const ref = get(historyAtom)
       return (ref.history = [get(targetAtom), ...ref.history].slice(0, limit))
     },
-    (_, set, action: RESET) => {
+    (get, set, action: RESET) => {
       if (action === RESET) {
-        set(historyAtom)
+        get(historyAtom).history.length = 0
+        set(refreshAtom, (v) => v + 1)
       }
     }
   )
+  refreshableHistoryAtom.debugPrivate = true
+  refreshableHistoryAtom.onMount = (setAtom) => () => setAtom(RESET)
+  return refreshableHistoryAtom
 }
