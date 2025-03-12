@@ -60,8 +60,8 @@ devDependencies:
     specifier: ^2.4.2
     version: 2.4.2
   jotai:
-    specifier: 2.11.1
-    version: 2.11.1(@types/react@19.0.10)(react@19.0.0)
+    specifier: 2.12.1
+    version: 2.12.1(@types/react@19.0.10)(react@19.0.0)
   jotai-history:
     specifier: 'link:'
     version: 'link:'
@@ -2379,8 +2379,8 @@ packages:
     hasBin: true
     dev: true
 
-  /jotai@2.11.1(@types/react@19.0.10)(react@19.0.0):
-    resolution: {integrity: sha512-41Su098mpHIX29hF/XOpDb0SqF6EES7+HXfrhuBqVSzRkxX48hD5i8nGsEewWZNAsBWJCTTmuz8M946Ih2PfcQ==}
+  /jotai@2.12.1(@types/react@19.0.10)(react@19.0.0):
+    resolution: {integrity: sha512-VUW0nMPYIru5g89tdxwr9ftiVdc/nGV9jvHISN8Ucx+m1vI9dBeHemfqYzEuw5XSkmYjD/MEyApN9k6yrATsZQ==}
     engines: {node: '>=12.20.0'}
     peerDependencies:
       '@types/react': '>=17.0.0'

@@ -23,12 +23,14 @@ export function withUndoableHistory<T extends Atom<unknown>>(
   targetAtom: T,
   limit: number
 ): WithUndoableHistory<T> {
-  const historyAtom = withPrivate(withHistory(targetAtom, limit))
+  const historyAtom = withHistory(targetAtom, limit)
+  historyAtom.debugPrivate = true
   let undoAtom: ReturnType<typeof withUndo> | undefined
   if (isWritableAtom(targetAtom)) {
     // eslint-disable-next-line prefer-rest-params
     const getArgs = arguments[2] ?? Array.of
-    undoAtom = withPrivate(withUndo(historyAtom, targetAtom, limit, getArgs))
+    undoAtom = withUndo(historyAtom, targetAtom, limit, getArgs)
+    undoAtom.debugPrivate = true
   }
   return atom(
     (get) =>
@@ -63,9 +65,4 @@ function isWritableAtom<T extends Atom<unknown>>(
   atom: T
 ): atom is T & InferWritableAtom<T> {
   return 'write' in atom
-}
-
-function withPrivate<T extends Atom<unknown>>(atom: T) {
-  atom.debugPrivate = true
-  return atom
 }
