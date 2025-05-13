@@ -4,7 +4,10 @@
     "outDir": "./dist",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true
   },
   "include": ["src"],
   "exclude": ["**/tests/*", "**/*.test.*"],
@@ -14,6 +17,7 @@
       ".ts": ".js",
       ".tsx": ".js"
     },
-    "resolveFullPaths": true
+    "resolveFullPaths": true,
+    "verbose": true
   }
 }

@@ -7,7 +7,7 @@ import type {
 } from 'jotai/vanilla'
 import { atom } from 'jotai/vanilla'
 import { REDO, RESET, UNDO } from './actions'
-import { History, withHistory } from './withHistory'
+import { type History, withHistory } from './withHistory'
 import { type Indicators, withUndo } from './withUndo'
 
 type WithUndoableHistory<T extends Atom<unknown>> =
