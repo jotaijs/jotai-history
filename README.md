@@ -25,7 +25,11 @@ function Component() {
 
 ### Description
 
-`withHistory` creates an atom that tracks the history of states for a given `targetAtom`. The most recent `limit` states are retained.
+`withHistory` creates an atom that tracks the history of states for a given `targetAtom` and provides undo/redo capabilities. The most recent `limit` states are retained.
+
+The returned atom value includes:
+- An array of historical states (most recent first)
+- `canUndo` and `canRedo` indicators (for writable atoms)
 
 ### Action Symbols
 

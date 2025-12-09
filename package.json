@@ -1,7 +1,7 @@
 {
   "name": "jotai-history",
   "description": "👻⌛",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "type": "module",
   "author": "David Maskasky",
   "contributors": [],
@@ -55,9 +55,10 @@
   "keywords": [
     "jotai",
     "react",
-    "family",
-    "collections",
-    "atoms"
+    "history",
+    "undo",
+    "redo",
+    "reset"
   ],
   "license": "MIT",
   "devDependencies": {
@@ -79,7 +80,7 @@
     "eslint-plugin-prettier": "^5.2.3",
     "happy-dom": "^15.11.7",
     "jiti": "^2.4.2",
-    "jotai": "2.11.1",
+    "jotai": "2.16.0",
     "jotai-history": "link:",
     "prettier": "^3.4.2",
     "react": "^19.0.0",
