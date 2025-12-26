@@ -37,7 +37,7 @@
     "src",
     "dist"
   ],
-  "packageManager": "pnpm@8.15.0",
+  "packageManager": "pnpm@10.18.3",
   "scripts": {
     "compile": "rm -rf dist && pnpm run '/^compile:.*/'",
     "compile:esm": "tsc -p tsconfig.esm.json && tsc-alias -p tsconfig.esm.json",
