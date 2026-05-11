@@ -7,7 +7,7 @@
   "contributors": [],
   "repository": {
     "type": "git",
-    "url": "https://github.com/jotaijs/jotai-history.git"
+    "url": "git+https://github.com/jotaijs/jotai-history.git"
   },
   "bugs": {
     "url": "https://github.com/jotaijs/jotai-history/issues"
