@@ -1,4 +1,4 @@
-import type { Atom, WritableAtom } from 'jotai'
+import type { Atom, WritableAtom } from 'jotai/vanilla'
 import { atom } from 'jotai/vanilla'
 import { RESET } from './actions'
 
